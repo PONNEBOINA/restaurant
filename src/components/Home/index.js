@@ -1,51 +1,14 @@
-import {useState, useEffect} from 'react'
+import {useState, useEffect, useContext} from 'react'
 import Loader from 'react-loader-spinner'
-
-import DishItems from '../DishItems'
 import Header from '../Header'
+import DishItem from '../DishItem'
+import CartContext from '../../context/CartContext'
 
 const Home = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [response, setResponse] = useState([])
   const [activeCategoryId, setactiveCategoryId] = useState('')
-  const [cartItems, setCartItems] = useState([])
-
-  const addItemTOCart = dish => {
-    const isAlreadythere = cartItems.find(item => item.dishId === dish.dishId)
-    if (!isAlreadythere) {
-      const newDish = {...dish, quantity: 1}
-      setCartItems(prev => [...prev, newDish])
-    } else {
-      setCartItems(prev =>
-        prev.map(item =>
-          item.dishId === dish.dishId
-            ? {
-                ...item,
-                quantity: item.quantity + 1,
-              }
-            : item,
-        ),
-      )
-    }
-  }
-
-  const removeItemFromCart = dish => {
-    const isAlreadythere = cartItems.find(item => item.dishId === dish.dishId)
-    if (isAlreadythere) {
-      setCartItems(prev =>
-        prev
-          .map(item =>
-            item.dish === dish.dishId
-              ? {
-                  ...item,
-                  quantity: item.quantity - 1,
-                }
-              : item,
-          )
-          .filter(item => item.quantity > 0),
-      )
-    }
-  }
+  const {cartList, setRestaurantName} = useContext(CartContext)
 
   const getupdatedData = tableMenuList =>
     tableMenuList.map(eachMenu => ({
@@ -57,6 +20,7 @@ const Home = () => {
         dishName: eachDish.dish_name,
         dishPrice: eachDish.dish_price,
         dishImage: eachDish.dish_image,
+
         dishCurrency: eachDish.dish_currency,
         dishCalories: eachDish.dish_calories,
         dishDescription: eachDish.dish_description,
@@ -72,6 +36,7 @@ const Home = () => {
     const data = await responses.json()
     const updated = getupdatedData(data[0].table_menu_list)
     setResponse(updated)
+    setRestaurantName(data[0].restaurant_name)
     setactiveCategoryId(updated[0].menuCategoryId)
     setIsLoading(false)
   }
@@ -81,6 +46,9 @@ const Home = () => {
   }, [])
 
   const updateCategoryId = menuCategoryId => setactiveCategoryId(menuCategoryId)
+
+  const addItemTOCart = () => {}
+  const removeItemFromCart = () => {}
 
   const renderTabMenuList = () =>
     response.map(eachCategory => {
@@ -92,7 +60,7 @@ const Home = () => {
           key={eachCategory.menuCategoryId === activeCategoryId}
           onClick={clickHandler}
         >
-          <button type='button'> {eachCategory.menuCategory} </button>
+          <button type="button"> {eachCategory.menuCategory} </button>
         </li>
       )
     })
@@ -104,10 +72,9 @@ const Home = () => {
     return (
       <ul>
         {categoryDishes.map(eachdish => (
-          <DishItems
+          <DishItem
             key={eachdish.dishId}
             dishdetails={eachdish}
-            cartItems={cartItems}
             addItemTOCart={addItemTOCart}
             removeItemFromCart={removeItemFromCart}
           />
@@ -126,7 +93,7 @@ const Home = () => {
     renderSpinner()
   ) : (
     <>
-      <Header cartItems={cartItems} />
+      <Header cartItems={cartList} />
       <ul>{renderTabMenuList()}</ul>
       {renderDishes()}
     </>
